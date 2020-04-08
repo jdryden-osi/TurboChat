@@ -3,6 +3,7 @@
     using OSIsoft.AF.Time;
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Xml.Schema;
 
     /// <summary>
@@ -22,6 +23,8 @@
         private const string applicationName = "PI TurboChat";
         private ConsoleColor originalBackground;
         private ConsoleColor originalForeground;
+        private ConsoleColor defaultBackground;
+        private ConsoleColor defaultForeground;
         private string originalTitle;
         private int originalWidth;
         private int originalHeight;
@@ -36,7 +39,10 @@
         private int dataLeft;
         private int dataRight;
         private int dataBottom;
-        private int currentLine;
+
+        private int workAreaHeight = 0; // 0 means no reserved work area
+
+        public int CurrentLine { get; private set; }
 
         public TextUserInterface(IChatStringWriter writer)
         {
@@ -47,7 +53,11 @@
             this.originalTitle = Console.Title;
             this.originalWidth = Console.WindowWidth;
             this.originalHeight = Console.WindowHeight;
-            
+
+            this.defaultBackground = ConsoleColor.DarkBlue;
+            this.defaultForeground = ConsoleColor.White;
+
+
             if (Console.WindowHeight < 50)
             {
                 Console.WindowHeight = 50;
@@ -61,7 +71,7 @@
 
         public void SplashScreen()
         {
-            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.BackgroundColor = this.defaultBackground;
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             // Remove Window Scroll bar
@@ -88,22 +98,20 @@
         {
             Console.Clear();
 
+            Console.BackgroundColor = this.defaultBackground;
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             this.dataLeft = 1;
             this.dataTop = 2;
             this.dataRight = Console.WindowWidth - 2;
             this.dataBottom = Console.WindowHeight - 4;
-            this.currentLine = this.dataTop;
+            this.CurrentLine = this.dataTop;
 
             BoxWindow();
 
             Console.CursorTop = 0;
             CenterText("╡ " + applicationName + " ╞");
 
-            //?? put PI TurboChat in header
-            //?? Add highlighted Room Name bar
             //?? add Highlighted help bar at bottom
-
         }
 
         public void Run()
@@ -130,17 +138,18 @@
                 int oldX = Console.CursorLeft;
                 int oldY = Console.CursorTop;
 
-                Console.SetCursorPosition(this.dataLeft, this.currentLine);
+                Console.BackgroundColor = this.defaultBackground;
+                Console.SetCursorPosition(this.dataLeft, this.CurrentLine);
 
-                if (currentLine < this.dataBottom)
+                if (CurrentLine < this.dataBottom)
                 {
-                    ++this.currentLine;
+                    ++this.CurrentLine;
                 }
                 else
                 {
                     // Scroll the data area
-                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight, this.dataBottom - 2, this.dataLeft, this.dataTop);
-                    Console.CursorTop = this.currentLine - 1;
+                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight - this.dataLeft, this.dataBottom - this.dataTop - 1, this.dataLeft, this.dataTop);
+                    Console.CursorTop = this.CurrentLine - 1;
                 }
 
                 ConsoleColor textColor;
@@ -171,7 +180,7 @@
 
                 Console.SetCursorPosition(1, 1);
                 Console.BackgroundColor = ConsoleColor.DarkGray;
-                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 var blanks = new string(' ', this.dataRight - this.dataLeft);
                 Console.Write(blanks);
                 Console.CursorLeft = this.dataLeft;
@@ -179,6 +188,60 @@
 
                 Console.ForegroundColor = fg;
                 Console.BackgroundColor = bg;
+            }
+        }
+
+        public int ReserveWorkArea(int numberOfLines)
+        {
+            if (numberOfLines <= 0)
+            {
+                return -1;
+            }
+
+
+            lock (this.consoleLock)
+            {
+                Console.BackgroundColor = this.defaultBackground;
+                this.workAreaHeight = Math.Min(numberOfLines, 4);
+                int newTop = this.dataTop + this.workAreaHeight;
+                Console.MoveBufferArea(Console.WindowLeft, newTop, Console.WindowWidth, this.dataBottom - dataTop, Console.WindowLeft, this.dataTop);
+
+                this.dataBottom -= numberOfLines;
+                Console.CursorVisible = false;
+            }
+
+            return this.dataBottom + 1;
+        }
+
+        public void ReleaseWorkArea()
+        {
+            if (this.workAreaHeight > 0)
+            {
+                lock (this.consoleLock)
+                {
+                    int oldX = Console.CursorLeft;
+                    int oldY = Console.CursorTop;
+
+                    Console.BackgroundColor = this.defaultBackground;
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.MoveBufferArea(Console.WindowLeft, this.dataBottom, Console.WindowWidth, this.workAreaHeight + 1, Console.WindowLeft, this.dataBottom + this.workAreaHeight);
+
+                    for (int i = 0; i < this.workAreaHeight; ++i)
+                    {
+                        int y = Console.WindowTop + Console.WindowHeight - this.workAreaHeight - 3 + i;
+                        Console.SetCursorPosition(0, y);
+                        Console.Write("║");
+                        Console.SetCursorPosition(Console.WindowWidth - 1, y);
+                        Console.Write("║");
+                    }
+
+                    this.dataBottom += this.workAreaHeight;
+                    this.workAreaHeight = 0;
+
+                    Console.CursorLeft = oldX;
+                    Console.CursorTop = oldY;
+                    Console.CursorVisible = true;
+                }
             }
         }
 
@@ -227,14 +290,20 @@
 
         private static void BoxWindow()
         {
-            Box(0, 0, Console.WindowWidth - 1, Console.WindowHeight - 2);
+            Box(0, 0, Console.WindowWidth, Console.WindowHeight - 2);
         }
 
         private string ReadLine()
         {
             int maxWidth = Console.WindowWidth - 3;
 
-            Console.SetCursorPosition(1, Console.WindowHeight - 4);
+            Console.BackgroundColor = ConsoleColor.Blue;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.SetCursorPosition(this.dataLeft, Console.WindowHeight - 4);
+
+            // Blank out the input line
+            Console.Write(new String(' ', this.dataRight - this.dataLeft));
+            Console.CursorLeft = this.dataLeft;
 
             string inputString = string.Empty;
             ConsoleKeyInfo keyInfo;
@@ -246,6 +315,26 @@
                     continue;
                 if ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control)
                     continue;
+
+#if false
+                if (keyInfo.Key == ConsoleKey.F2)
+                {
+                    this.ReserveWorkArea(2);
+                    continue;
+                }
+
+                if (keyInfo.Key == ConsoleKey.F3)
+                {
+                    this.ReserveWorkArea(3);
+                    continue;
+                }
+
+                if (keyInfo.Key == ConsoleKey.F1)
+                {
+                    this.ReleaseWorkArea();
+                    continue;
+                }
+#endif
 
                 // Ignore if KeyChar value is \u0000.
                 if (keyInfo.KeyChar == '\u0000')
@@ -312,7 +401,7 @@
             return inputString;
         }
 
-        #region IDisposable Support
+#region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
@@ -338,6 +427,6 @@
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
         }
-        #endregion
+#endregion
     }
 }
