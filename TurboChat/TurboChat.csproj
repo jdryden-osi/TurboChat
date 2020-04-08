@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColorScheme.cs" />
     <Compile Include="ExtensionHandler.cs" />
     <Compile Include="IChatStringDisplay.cs" />
     <Compile Include="IChatStringWriter.cs" />

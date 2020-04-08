@@ -19,11 +19,12 @@ namespace TurboChat
             var options = new TurboChatOptions();
             var writer = new ChatStringWriter(options);
 
-            using (var ui = new TextUserInterface(writer))
+            using (var ui = new TextUserInterface(writer, options))
             {
                 ui.SplashScreen();
 
                 // ask the TURBOCHAT user to enter their TURBOCHAT name
+                options.Colors = GetColorScheme();
                 options.Name = GetUserName();
                 while (SetupChatRoom(ui, options));
             }
@@ -33,7 +34,7 @@ namespace TurboChat
         {
             // pick a TURBOCHAT room to digitally chill out in
             var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
-            var point = GetRoomSelection(server);
+            var point = GetRoomSelection(server, options);
             if (point == null)
             {
                 return false;
@@ -109,8 +110,16 @@ namespace TurboChat
             return false;
         }
 
-        static PIPoint GetRoomSelection(PIServer server)
+        static ColorScheme GetColorScheme()
         {
+            return new ColorScheme(ConsoleColor.Black, ConsoleColor.Green);
+        }
+
+        static PIPoint GetRoomSelection(PIServer server, TurboChatOptions options)
+        {
+            Console.ForegroundColor = options.Colors.foreground;
+            Console.BackgroundColor = options.Colors.background;
+            Console.Clear();
             var rooms = PIPoint.FindPIPoints(server, "TurboChat*").ToList();
             Console.WriteLine("Available rooms: ");
             for (var i = 1; i <= rooms.Count; i++)

@@ -38,7 +38,7 @@
         private int dataBottom;
         private int currentLine;
 
-        public TextUserInterface(IChatStringWriter writer)
+        public TextUserInterface(IChatStringWriter writer, TurboChatOptions options)
         {
             this.writer = writer;
 
@@ -311,7 +311,6 @@
 
             return inputString;
         }
-
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
