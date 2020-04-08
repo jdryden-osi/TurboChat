@@ -127,8 +127,6 @@
                     writer.SendChatString(newMessage);
                 }
             }
-
-            this.exitProgram = false;
         }
 
         public void AddChatString(AFTime time, string id, string text)
@@ -226,9 +224,9 @@
                     Console.ForegroundColor = ConsoleColor.DarkYellow;
                     Console.MoveBufferArea(Console.WindowLeft, this.dataBottom, Console.WindowWidth, this.workAreaHeight + 1, Console.WindowLeft, this.dataBottom + this.workAreaHeight);
 
-                    for (int i = 0; i < this.workAreaHeight; ++i)
+                    for (int i = 0; i <= this.workAreaHeight; ++i)
                     {
-                        int y = Console.WindowTop + Console.WindowHeight - this.workAreaHeight - 3 + i;
+                        int y = Console.WindowTop + Console.WindowHeight - this.workAreaHeight - 4 + i;
                         Console.SetCursorPosition(0, y);
                         Console.Write("║");
                         Console.SetCursorPosition(Console.WindowWidth - 1, y);
@@ -241,6 +239,7 @@
                     Console.CursorLeft = oldX;
                     Console.CursorTop = oldY;
                     Console.CursorVisible = true;
+                    Console.ForegroundColor = this.defaultForeground;
                 }
             }
         }
@@ -297,7 +296,7 @@
         {
             int maxWidth = Console.WindowWidth - 3;
 
-            Console.BackgroundColor = ConsoleColor.Blue;
+            Console.BackgroundColor =this.defaultBackground;
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.SetCursorPosition(this.dataLeft, Console.WindowHeight - 4);
 
