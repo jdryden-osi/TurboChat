@@ -124,19 +124,21 @@ namespace TurboChat
 
         static PIPoint CreateNewRoom(PIServer server)
         {
+            Console.Write("Enter room name: ");
             while (true)
             {
-                Console.Write("Enter room name: ");
                 var newRoom = Console.ReadLine();
                 if (string.IsNullOrWhiteSpace(newRoom))
                 {
                     Console.WriteLine("Come on! Say something!");
+                    Console.Write("Go ahead. I'm listening: ");
                 }
                 else if (!CheckLength(newRoom))
                 {
                     if (PIPoint.TryFindPIPoint(server, "TurboChat-" + newRoom, out _))
                     {
                         Console.WriteLine("You can't steal another chat room name! Duh!");
+                        Console.Write("Try again: ");
                     }
                     else
                     {
