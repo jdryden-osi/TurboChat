@@ -33,6 +33,7 @@ namespace TurboChat
                 options.ExtensionHandler = new ExtensionHandler(ui);
 
                 ui.DrawApplicationChrome();
+                ui.AddChatRoomName(RoomName(options.Point));
 
                 // print last 50 messages in the "room"
                 var initialMessages = options.Point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
@@ -99,13 +100,7 @@ namespace TurboChat
             Console.WriteLine("Available rooms: ");
             for (var i = 1; i <= rooms.Count; i++)
             {
-                if (!rooms[i-1].IsAttributeLoaded("Descriptor"))
-                {
-                    rooms[i - 1].LoadAttributes(new string[] { "Descriptor" });
-                }
-
-                var desc = rooms[i - 1].GetAttribute("Descriptor") as string;
-                Console.WriteLine($"{i,3} {(string.IsNullOrWhiteSpace(desc) ? rooms[i-1].Name : desc)}");
+                Console.WriteLine($"{i,3} {RoomName(rooms[i - 1])}");
             }
 
             Console.Write("Select your TURBOCHAT room (/N to create new room): ");
@@ -166,6 +161,20 @@ namespace TurboChat
             }
 
             display.AddChatString(afValue.Timestamp, userName, value);
+        }
+
+        /// <summary>
+        /// To determine the room name associated with the input PI Point
+        /// </summary>
+        static string RoomName(PIPoint tag)
+        {
+            if (!tag.IsAttributeLoaded("Descriptor"))
+            {
+                tag.LoadAttributes(new string[] { "Descriptor" });
+            }
+
+            var desc = tag.GetAttribute("Descriptor") as string;
+            return string.IsNullOrWhiteSpace(desc) ? tag.Name : desc;
         }
     }
 }

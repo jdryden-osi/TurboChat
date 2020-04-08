@@ -18,7 +18,8 @@
   \ \  \___|\ \  \           \ \  \ \ \  \\\  \ \  \\  \\ \  \|\  \ \  \\\  \ \  \____\ \  \ \  \ \  \ \  \   \ \  \ 
    \ \__\    \ \__\           \ \__\ \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\ \__\ \__\ \__\   \ \__\
     \|__|     \|__|            \|__|  \|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__|\|__|\|__|\|__|    \|__|";
-                                                                                                                   
+
+        private const string applicationName = "PI TurboChat";
         private ConsoleColor originalBackground;
         private ConsoleColor originalForeground;
         private string originalTitle;
@@ -67,7 +68,7 @@
             Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
 
             Console.Clear();
-            Console.Title = "TURBO PI-CHAT";
+            Console.Title = applicationName;
 
             Console.SetCursorPosition(1, 15);
             Console.WriteLine(logo);
@@ -95,6 +96,9 @@
             this.currentLine = this.dataTop;
 
             BoxWindow();
+
+            Console.CursorTop = 0;
+            CenterText("╡ " + applicationName + " ╞");
 
             //?? put PI TurboChat in header
             //?? Add highlighted Room Name bar
@@ -131,7 +135,7 @@
                 else
                 {
                     // Scroll the data area
-                    //??
+                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight, this.dataBottom - 1, this.dataLeft, this.dataTop);
                 }
 
                 ConsoleColor textColor;
@@ -150,6 +154,26 @@
 
                 Console.CursorLeft = oldX;
                 Console.CursorTop = oldY;
+            }
+        }
+
+        public void AddChatRoomName(string roomName)
+        {
+            lock (this.consoleLock)
+            {
+                var fg = Console.ForegroundColor;
+                var bg = Console.BackgroundColor;
+
+                Console.SetCursorPosition(1, 1);
+                Console.BackgroundColor = ConsoleColor.DarkGray;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                var blanks = new string(' ', this.dataRight - this.dataLeft);
+                Console.Write(blanks);
+                Console.CursorLeft = this.dataLeft;
+                Console.Write($"Room: {roomName}");
+
+                Console.ForegroundColor = fg;
+                Console.BackgroundColor = bg;
             }
         }
 
