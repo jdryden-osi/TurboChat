@@ -71,17 +71,23 @@ namespace TurboChat
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     Console.Write("I couldn't hear that, speak up: ");
-
-                }
-                else if (username.Length > 10)
-                {
-                    Console.Write("You think storage is free? Pick a shorter name: ");
-                }
-                else
+                }                
+                else if (!CheckLength(username))
                 {
                     return username.Trim();
                 }
             }
+        }
+
+        static bool CheckLength(string name)
+        {
+            if (name.Length > 10)
+            {
+                Console.Write("You think storage is free? Pick a shorter name: ");
+                return true;
+            }
+
+            return false;
         }
 
         static PIPoint GetRoomSelection(PIServer server)
@@ -90,9 +96,16 @@ namespace TurboChat
             Console.WriteLine("Available rooms: ");
             for (var i = 1; i <= rooms.Count; i++)
             {
-                Console.WriteLine($"{i,3} {rooms[i-1].Name}");
+                if (!rooms[i-1].IsAttributeLoaded("Descriptor"))
+                {
+                    rooms[i - 1].LoadAttributes(new string[] { "Descriptor" });
+                }
+
+                var desc = rooms[i - 1].GetAttribute("Descriptor") as string;
+                Console.WriteLine($"{i,3} {(string.IsNullOrWhiteSpace(desc) ? rooms[i-1].Name : desc)}");
             }
-            Console.Write("Select your TURBOCHAT room: ");
+
+            Console.Write("Select your TURBOCHAT room (/N to create new room): ");
             while (true)
             {
                 var selection = Console.ReadLine();
@@ -100,9 +113,37 @@ namespace TurboChat
                 {
                     return rooms[index - 1];
                 }
+                else if (selection == "/N")
+                {
+                    return CreateNewRoom(server);
+                }
                 else
                 {
                     Console.Write("WRONG! Try again, dummy: ");
+                }
+            }
+        }
+
+        static PIPoint CreateNewRoom(PIServer server)
+        {
+            while (true)
+            {
+                Console.Write("Enter room name: ");
+                var newRoom = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(newRoom))
+                {
+                    Console.WriteLine("Come on! Say something!");
+                }
+                else if (!CheckLength(newRoom))
+                {
+                    if (PIPoint.TryFindPIPoint(server, "TurboChat-" + newRoom, out _))
+                    {
+                        Console.WriteLine("You can't steal another chat room name! Duh!");
+                    }
+                    else
+                    {
+                        return server.CreatePIPoint("TurboChat-" + newRoom, new Dictionary<string, object> { { "PointSource", "CHAT" }, {"PointType", PIPointType.String }, { "Descriptor", newRoom } });
+                    }
                 }
             }
         }
