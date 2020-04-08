@@ -25,45 +25,60 @@ namespace TurboChat
 
                 // ask the TURBOCHAT user to enter their TURBOCHAT name
                 options.Name = GetUserName();
+                while (SetupChatRoom(ui, options));
+            }
+        }
 
-                // pick a TURBOCHAT room to digitally chill out in
-                var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
-                options.Point = GetRoomSelection(server);
+        static bool SetupChatRoom(TextUserInterface ui, TurboChatOptions options)
+        {
+            // pick a TURBOCHAT room to digitally chill out in
+            var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
+            var point = GetRoomSelection(server);
+            if (point == null)
+            {
+                return false;
+            }
 
-                options.ExtensionHandler = new ExtensionHandler(ui);
+            options.Point = point;
+            options.ExtensionHandler = new ExtensionHandler(ui);
 
                 ui.DrawApplicationChrome();
                 ui.AddChatRoomName(RoomName(options.Point));
 
-                // print last 50 messages in the "room"
-                var initialMessages = options.Point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
-                foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
+            // print last 50 messages in the "room"
+            var initialMessages = options.Point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
+            foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
+            {
+                PrintMessage(ui, msg);
+            }
+
+            var canceled = false;
+            // start a background task to print new "messages" in the "room" every "1 second"
+            Task.Run(() =>
+            {
+                var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
+                pipe.AddSignups(new List<PIPoint> { options.Point });
+
+                while (!canceled)
                 {
-                    PrintMessage(ui, msg);
+                    var updates = pipe.GetUpdateEvents(100)
+                        .Where(u => u.Action == AFDataPipeAction.Update)
+                        .OrderBy(v => v.Value.Timestamp);
+
+                    foreach (var update in updates)
+                    {
+                        PrintMessage(ui, update.Value);
+                    }
+                    Thread.Sleep(1000);
                 }
 
-                // start a background task to print new "messages" in the "room" every "1 second"
-                Task.Run(() =>
-                {
-                    var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
-                    pipe.AddSignups(new List<PIPoint> { options.Point });
+                pipe.Close();
+            });
 
-                    while (true)
-                    {
-                        var updates = pipe.GetUpdateEvents(100)
-                            .Where(u => u.Action == AFDataPipeAction.Update)
-                            .OrderBy(v => v.Value.Timestamp);
-
-                        foreach (var update in updates)
-                        {
-                            PrintMessage(ui, update.Value);
-                        }
-                        Thread.Sleep(1000);
-                    }
-                });
-
-                ui.Run();
-            }
+            ui.Run();
+            canceled = true;
+            Console.Clear();
+            return true;
         }
 
         static string GetUserName()
@@ -114,6 +129,10 @@ namespace TurboChat
                 else if (selection == "/N")
                 {
                     return CreateNewRoom(server);
+                }
+                else if (selection == "/Q")
+                {
+                    return null;
                 }
                 else
                 {

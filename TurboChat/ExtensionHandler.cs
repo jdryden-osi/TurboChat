@@ -41,11 +41,36 @@ namespace TurboChat
                 case "gauge":
                     DrawGauge(options, args[1]);
                     break;
+                case "parkaccess":
+                    ParkAccess(options);
+                    break;
                 default:
                     break;
             }
 
             return false;
+        }
+
+        private void ParkAccess(TurboChatOptions options)
+        {
+            Console.Clear();
+            for (var i = 0; i < 3; i++)
+            {
+                Console.Write("Enter passcode: ");
+                Console.ReadLine();
+                Console.WriteLine("Access Denied");
+            }
+
+            Console.Beep();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("YOU DIDN'T SAY THE MAGIC WORD!!!");
+            Thread.Sleep(1000);
+            while(true)
+            {
+                Thread.Sleep(100);
+                Console.WriteLine("YOU DIDN'T SAY THE MAGIC WORD!");
+                Console.Beep();
+            }
         }
 
         private void DrawGauge(TurboChatOptions options, string point)

@@ -119,6 +119,8 @@
                     writer.SendChatString(newMessage);
                 }
             }
+
+            this.exitProgram = false;
         }
 
         public void AddChatString(AFTime time, string id, string text)
