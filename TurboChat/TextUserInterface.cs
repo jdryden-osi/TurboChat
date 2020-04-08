@@ -108,6 +108,8 @@
 
         public void Run()
         {
+            this.exitProgram = false;
+
             // get the next dumb message to send
             while (!this.exitProgram)
             {
@@ -135,7 +137,8 @@
                 else
                 {
                     // Scroll the data area
-                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight, this.dataBottom - 1, this.dataLeft, this.dataTop);
+                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight, this.dataBottom - 2, this.dataLeft, this.dataTop);
+                    Console.CursorTop = this.currentLine - 1;
                 }
 
                 ConsoleColor textColor;
