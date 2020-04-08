@@ -42,7 +42,7 @@ namespace TurboChat
                     DrawGauge(options, args[1]);
                     break;
                 case "parkaccess":
-                    ParkAccess();
+                    ParkAccess(options);                    
                     break;
                 case "logo":
                     CreateLogo(options);
@@ -52,6 +52,20 @@ namespace TurboChat
             }
 
             return false;
+        }
+
+        private void PrintAscii(string logo, TurboChatOptions options)
+        {
+            using (var reader = new System.IO.StringReader(logo))
+            {
+                var line = reader.ReadLine();
+                while (line != null)
+                {
+                    line = line.Replace(" ", "_");
+                    WriteMessage(options.Point, options.Name, line);
+                    line = reader.ReadLine();
+                }
+            }
         }
 
         private void CreateLogo(TurboChatOptions options)
@@ -90,27 +104,70 @@ namespace TurboChat
                   ..#%(     .%@&&&&&&&&&&&&&&#...          
 
 ";
-            using (var reader = new System.IO.StringReader(logo))
-            {
-                var line = reader.ReadLine();
-                while (line != null)
-                {
-                    line = line.Replace(" ", "_");
-                    WriteMessage(options.Point, options.Name, line);
-                    line = reader.ReadLine();
-                }
-            }
+            PrintAscii(logo, options);
         }
 
-        private void ParkAccess()
+        private void ParkAccess(TurboChatOptions options)
         {
-            Console.Clear();
             for (var i = 0; i < 3; i++)
             {
                 Console.Write("Enter passcode: ");
-                Console.ReadLine();
+                var line = Console.ReadLine();
+                if (line == "unixsystem")
+                {
+                    var dino = @"
+	
+$$$$$$$$$$$$$$$$$$$$$$$$$$$**""""""""`` ````""""""#*R$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$*""""..........      `""#$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$#""    .ue@$$$********$$$$Weu.   `""*$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$#""   ue$$*#""""              `""""*$$No.   ""R$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$P""   u@$*""`                         ""#$$o.  ^*$$$$$$$$$$$$$$
+$$$$$$$$$$$P""  .o$R"". .WN.           ""#$Nu  `#$$$$$$$$$$$$
+$$$$$$$$$$""  .@$#`       'ou  .oeW$$$$$$$$W            ""$$u  ""$$$$$$$$$$$
+$$$$$$$$#   o$#`      ueL  $$$$$$$$$$$$$$$$ku.           ""$$u  ""$$$$$$$$$
+$$$$$$$""  x$P`        `""$$u$$$$$$$$$$$$$$""#$$$L            ""$o *$$$$$$$
+$$$$$$""  d$""        #$u.2$$$$$$$$$$$$$$$$  #$$$Nu            $$.  #$$$$$$
+$$$$$""  @$""          $$$$$$$$$$$$$$$$$$$$k  $$#*$$u           #$L  #$$$$$
+$$$$""  d$         #Nu@$$$$$$$$$$$$$$$$$$""  x$$L #$$$o.         #$c  #$$$$
+$$$F  d$          .$$$$$$$$$$$$$$$$$$$$N  d$$$$  ""$$$$$u        #$L  #$$$
+$$$  :$F..`$$$$$$$$$$$$$$$$$$$$$$$$$$$`    R$$$$$eu.     $$   $$$
+$$!  $$        . R$$$$$$$$$$$$$$$$$$$$$$$$$$$$$.   @$$$$$$$$Nu   '$N  `$$
+$$  x$""        Re$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$uu@""``""$$$$$$$i   #$:  $$
+$E  $$       c 8$$$$$$$$$$$$$$$$$$$$$G(   ``^*$$$$$$$WW$$$$$$$$N   $$  4$
+$~ :$$N. tL i)$$$$$$$$$$$$$$$$$$$$$$$$$N       ^#R$$$$$$$$$$$$$$$  9$  '$
+$  t$$$$u$$W$$$$$$$$$$$$$$!$$$$$$$$$$$$$&       . c?""*$$$R$$$$$$$  '$k  $
+$  @$$$$$$$$$$$$$$$$$$$$""E F!$$$$$$$$$$.""        +.""@\* x .""""*$$""   $B  $
+$  $$$$$$$$$$$$$$$$""$)#F     $$$$$$$$$$$           `  -d>x""*=.""`    $$  $
+$  $$$$$$$$$$?$$R'$ `#d$""""    #$$$$$$$$$ > .                ""       $$  $
+$  $$$$$$$($$@$""` P *@$.@#""!    ""*$$$$$$$L!.                        $$  $
+$  9$$$$$$$L#$L  ! "" <$$`          ""*$$$$$NL:""z  f                  $E  $
+$> ?$$$$ $$$b$^      .$c .ueu.        `""$$$$b""x""#  ""               x$!  $
+$k  $$$$N$ ""$$L:$oud$$$` d$ .u.         ""$$$$$o."" #f.              $$   $
+$$  R$""""$$o.$""$$$$"""""" ue$$$P""`""c          ""$$$$$$Wo'              :$F  t$
+$$: '$&  $*$$u$$$$u.ud$R"" `    ^            ""#*****               @$   $$
+$$N  #$: E 3$$$$$$$$$""                                           d$""  x$$
+$$$k  $$   F *$$$$*""                                            :$P   $$$
+$$$$  '$b                                                      .$P   $$$$
+$$$$b  `$b                                                    .$$   @$$$$
+$$$$$N  ""$N                                                  .$P   @$$$$$
+$$$$$$N  '*$c                                               u$#  .$$$$$$$
+$$$$$$$$.  ""$N.                                           .@$""  x$$$$$$$$
+$$$$$$$$$o   #$N.                                       .@$#  .@$$$$$$$$$
+$$$$$$$$$$$u  `#$Nu                                   u@$#   u$$$$$$$$$$$
+$$$$$$$$$$$$$u   ""R$o.                             ue$R""   u$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$o.  ^#$$bu.                     .uW$P""`  .u$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$u   `""#R$$Wou..... ....uueW$$*#""   .u@$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$Nu.    `""""#***$$$$$***""""""`    .o$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$eu..               ...ed$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$NWWeeeeedW@$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+";
+                    PrintAscii(dino, options);
+                    return;
+                }
                 Console.WriteLine("Access Denied");
             }
+
             Thread.Sleep(1000);
             Console.Write("and......");
             Thread.Sleep(1000);
