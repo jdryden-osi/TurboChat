@@ -75,9 +75,13 @@ namespace TurboChat
 
         private void DrawGauge(TurboChatOptions options, string point)
         {
+
+            var currentLine = Console.CursorTop;
+            var line = 48;
+
             Console.WriteLine("Press any key to exit gauge mode...");
-            Console.WriteLine();
-            Console.WriteLine();
+            Console.SetCursorPosition(0, line);
+
             var currentPoint = PIPoint.FindPIPoint(options.Point.Server, point);
 
             var attrs = currentPoint.GetAttributes("zero", "span");
@@ -91,7 +95,7 @@ namespace TurboChat
             Console.Write(zerodouble);
             Console.CursorLeft = 100;
             Console.Write(zerodouble + spandouble);
-            Console.WriteLine();
+            Console.SetCursorPosition(0, line + 1);
             Console.CursorLeft = 0;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
@@ -123,8 +127,12 @@ namespace TurboChat
 
             Console.ReadKey(true);
             Console.BackgroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine();
-            Console.WriteLine();
+            Console.SetCursorPosition(0, line);
+            for (var i = 0; i < 128; i++) { Console.Write(" "); }
+            Console.SetCursorPosition(0, line + 1);
+            for (var i = 0; i < 128; i++) { Console.Write(" "); }
+            Console.SetCursorPosition(1, currentLine);
+            for (var i = 0; i < 50; i++) { Console.Write(" "); }
         }
 
         static void WriteMessage(PIPoint point, string username, string message)
