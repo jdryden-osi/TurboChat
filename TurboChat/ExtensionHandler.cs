@@ -50,6 +50,7 @@ namespace TurboChat
 
         private void DrawGauge(TurboChatOptions options, string point)
         {
+            Console.WriteLine("Press any key to exit gauge mode...");
             Console.WriteLine();
             Console.WriteLine();
             var currentPoint = PIPoint.FindPIPoint(options.Point.Server, point);
@@ -58,37 +59,39 @@ namespace TurboChat
             var zero = attrs["zero"].ToString();
             var span = attrs["span"].ToString();
 
-            var zeroFloat = float.Parse(zero);
-            var spanFloat = float.Parse(span);
+            var zerodouble = double.Parse(zero);
+            var spandouble = double.Parse(span);
 
             Console.CursorLeft = 0;
-            Console.Write(zeroFloat);
+            Console.Write(zerodouble);
             Console.CursorLeft = 100;
-            Console.Write(zeroFloat + spanFloat);
+            Console.Write(zerodouble + spandouble);
             Console.WriteLine();
             Console.CursorLeft = 0;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
             while (!Console.KeyAvailable)
             {
-                var gaugeValue = float.Parse(currentPoint.CurrentValue().ToString());
-                if (gaugeValue > zeroFloat + spanFloat)
+                var gaugeValue = double.Parse(currentPoint.CurrentValue().ToString());
+                if (gaugeValue > zerodouble + spandouble)
                 {
-                    gaugeValue = zeroFloat + spanFloat;
+                    gaugeValue = zerodouble + spandouble;
                 }
-                else if (gaugeValue < zeroFloat)
+                else if (gaugeValue < zerodouble)
                 {
-                    gaugeValue = zeroFloat;
+                    gaugeValue = zerodouble;
                 }
 
-                var position = 100 * gaugeValue / (spanFloat - zeroFloat);
+                var position = 100 * (gaugeValue - zerodouble) / spandouble;
 
                 Console.CursorLeft = 0;
                 Console.BackgroundColor = ConsoleColor.DarkBlue;
-                for (var i = 0; i < 100; i++) { Console.Write(" "); }
+                for (var i = 0; i < 115; i++) { Console.Write(" "); }
                 Console.CursorLeft = 0;
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 for (var i = 0; i < position; i++) { Console.Write(" "); }
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                Console.Write(gaugeValue);
 
                 Thread.Sleep(1000);
             }
