@@ -4,6 +4,7 @@ namespace TurboChat
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using OSIsoft.AF.Asset;
@@ -15,24 +16,26 @@ namespace TurboChat
     {
         static void Main(string[] args)
         {
-            // ask the TURBOCHAT user to enter their TURBOCHAT name
-            var username = GetUserName();
-
-            // pick a TURBOCHAT room to digitally chill out in
-            var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
-            var point = GetRoomSelection(server);
-
-            var options = new TurboChatOptions(username, point);
+            var options = new TurboChatOptions();
             var writer = new ChatStringWriter(options);
 
             using (var ui = new TextUserInterface(writer))
             {
                 ui.SplashScreen();
 
+                // ask the TURBOCHAT user to enter their TURBOCHAT name
+                options.Name = GetUserName();
+
+                // pick a TURBOCHAT room to digitally chill out in
+                var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
+                options.Point = GetRoomSelection(server);
+
                 options.ExtensionHandler = new ExtensionHandler(ui);
 
+                ui.DrawApplicationChrome();
+
                 // print last 50 messages in the "room"
-                var initialMessages = point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
+                var initialMessages = options.Point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
                 foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
                 {
                     PrintMessage(ui, msg);
@@ -42,7 +45,7 @@ namespace TurboChat
                 Task.Run(() =>
                 {
                     var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
-                    pipe.AddSignups(new List<PIPoint> { point });
+                    pipe.AddSignups(new List<PIPoint> { options.Point });
 
                     while (true)
                     {

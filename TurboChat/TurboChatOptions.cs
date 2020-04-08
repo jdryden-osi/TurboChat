@@ -4,14 +4,12 @@ namespace TurboChat
 {
     class TurboChatOptions
     {
-        public string Name { get; private set; }
-        public PIPoint Point { get; private set; }
+        public string Name { get; set; }
+        public PIPoint Point { get; set; }
         public IExtensionHandler ExtensionHandler { get; set; }
 
-        public TurboChatOptions(string name, PIPoint point)
+        public TurboChatOptions()
         {
-            this.Name = name;
-            this.Point = point;
         }
     }
 }
