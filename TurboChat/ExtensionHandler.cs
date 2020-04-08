@@ -78,12 +78,11 @@ namespace TurboChat
 
         private void DrawGauge(TurboChatOptions options, string point)
         {
+            var thisUI = (TextUserInterface)ui;
+            var line = thisUI.ReserveWorkArea(3) + 1;
 
-            var currentLine = Console.CursorTop;
-            var line = 48;
-
-            Console.WriteLine("Press any key to exit gauge mode...");
             Console.SetCursorPosition(0, line);
+//            Console.Write("Press any key to exit gauge mode...");
 
             var currentPoint = PIPoint.FindPIPoint(options.Point.Server, point);
 
@@ -129,13 +128,7 @@ namespace TurboChat
             }
 
             Console.ReadKey(true);
-            Console.BackgroundColor = ConsoleColor.DarkBlue;
-            Console.SetCursorPosition(0, line);
-            for (var i = 0; i < 128; i++) { Console.Write(" "); }
-            Console.SetCursorPosition(0, line + 1);
-            for (var i = 0; i < 128; i++) { Console.Write(" "); }
-            Console.SetCursorPosition(1, currentLine);
-            for (var i = 0; i < 50; i++) { Console.Write(" "); }
+            thisUI.ReleaseWorkArea();
         }
 
         static void WriteMessage(PIPoint point, string username, string message)
