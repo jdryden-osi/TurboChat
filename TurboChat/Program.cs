@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using OSIsoft.AF.Asset;
-using OSIsoft.AF.Data;
-using OSIsoft.AF.PI;
-using OSIsoft.AF.Time;
-
+﻿
 namespace TurboChat
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using OSIsoft.AF.Asset;
+    using OSIsoft.AF.Data;
+    using OSIsoft.AF.PI;
+    using OSIsoft.AF.Time;
+    using Turbo_PI_Chat;
+
     class Program
     {
         static void Main(string[] args)
@@ -18,43 +20,48 @@ namespace TurboChat
             var username = GetUserName();
 
             // pick a TURBOCHAT room to digitally chill out in
-            var server = (new PIServers())["CSPIBUILD"];
+            var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
             var point = GetRoomSelection(server);
 
-            // print last 50 messages in the "room"
-            var initialMessages = point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
-            foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
+            using (var ui = new TextUserInterface())
             {
-                PrintMessage(msg);
-            }
+                ui.SplashScreen();
 
-            // start a background task to print new "messages" in the "room" every "1 second"
-            Task.Run(() =>
-            {
-                var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
-                pipe.AddSignups(new List<PIPoint> { point });
+                // print last 50 messages in the "room"
+                var initialMessages = point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
+                foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
+                {
+                    PrintMessage(msg);
+                }
 
+                // start a background task to print new "messages" in the "room" every "1 second"
+                Task.Run(() =>
+                {
+                    var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
+                    pipe.AddSignups(new List<PIPoint> { point });
+
+                    while (true)
+                    {
+                        var updates = pipe.GetUpdateEvents(100)
+                            .Where(u => u.Action == AFDataPipeAction.Update)
+                            .OrderBy(v => v.Value.Timestamp);
+
+                        foreach (var update in updates)
+                        {
+                            PrintMessage(update.Value);
+                        }
+                        Thread.Sleep(1000);
+                    }
+                });
+
+                // get the next dumb message to send
                 while (true)
                 {
-                    var updates = pipe.GetUpdateEvents(100)
-                        .Where(u => u.Action == AFDataPipeAction.Update)
-                        .OrderBy(v => v.Value.Timestamp);
-
-                    foreach (var update in updates)
+                    var newMessage = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newMessage))
                     {
-                        PrintMessage(update.Value);
+                        WriteMessage(point, username, newMessage);
                     }
-                    Thread.Sleep(1000);
-                }
-            });
-
-            // get the next dumb message to send
-            while (true)
-            {
-                var newMessage = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(newMessage))
-                {
-                    WriteMessage(point, username, newMessage);
                 }
             }
         }
