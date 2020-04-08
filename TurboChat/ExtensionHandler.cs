@@ -41,6 +41,9 @@ namespace TurboChat
                 case "gauge":
                     DrawGauge(options, args[1]);
                     break;
+                case "parkaccess":
+                    ParkAccess(options);
+                    break;
                 default:
                     break;
             }
@@ -48,55 +51,91 @@ namespace TurboChat
             return false;
         }
 
+        private void ParkAccess(TurboChatOptions options)
+        {
+            Console.Clear();
+            for (var i = 0; i < 3; i++)
+            {
+                Console.Write("Enter passcode: ");
+                Console.ReadLine();
+                Console.WriteLine("Access Denied");
+            }
+            Thread.Sleep(1000);
+            Console.Write("and......");
+            Thread.Sleep(1000);
+            Console.Beep();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("YOU DIDN'T SAY THE MAGIC WORD!!!");
+            Thread.Sleep(1000);
+            System.Diagnostics.Process.Start("https://www.youtube.com/watch?v=RfiQYRn7fBg");
+            while(true)
+            {
+                Thread.Sleep(100);
+                Console.WriteLine("YOU DIDN'T SAY THE MAGIC WORD!");
+                Console.Beep();
+            }
+        }
+
         private void DrawGauge(TurboChatOptions options, string point)
         {
-            Console.WriteLine();
-            Console.WriteLine();
+
+            var currentLine = Console.CursorTop;
+            var line = 48;
+
+            Console.WriteLine("Press any key to exit gauge mode...");
+            Console.SetCursorPosition(0, line);
+
             var currentPoint = PIPoint.FindPIPoint(options.Point.Server, point);
 
             var attrs = currentPoint.GetAttributes("zero", "span");
             var zero = attrs["zero"].ToString();
             var span = attrs["span"].ToString();
 
-            var zeroFloat = float.Parse(zero);
-            var spanFloat = float.Parse(span);
+            var zerodouble = double.Parse(zero);
+            var spandouble = double.Parse(span);
 
             Console.CursorLeft = 0;
-            Console.Write(zeroFloat);
+            Console.Write(zerodouble);
             Console.CursorLeft = 100;
-            Console.Write(zeroFloat + spanFloat);
-            Console.WriteLine();
+            Console.Write(zerodouble + spandouble);
+            Console.SetCursorPosition(0, line + 1);
             Console.CursorLeft = 0;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
             while (!Console.KeyAvailable)
             {
-                var gaugeValue = float.Parse(currentPoint.CurrentValue().ToString());
-                if (gaugeValue > zeroFloat + spanFloat)
+                var gaugeValue = double.Parse(currentPoint.CurrentValue().ToString());
+                if (gaugeValue > zerodouble + spandouble)
                 {
-                    gaugeValue = zeroFloat + spanFloat;
+                    gaugeValue = zerodouble + spandouble;
                 }
-                else if (gaugeValue < zeroFloat)
+                else if (gaugeValue < zerodouble)
                 {
-                    gaugeValue = zeroFloat;
+                    gaugeValue = zerodouble;
                 }
 
-                var position = 100 * gaugeValue / (spanFloat - zeroFloat);
+                var position = 100 * (gaugeValue - zerodouble) / spandouble;
 
                 Console.CursorLeft = 0;
                 Console.BackgroundColor = ConsoleColor.DarkBlue;
-                for (var i = 0; i < 100; i++) { Console.Write(" "); }
+                for (var i = 0; i < 115; i++) { Console.Write(" "); }
                 Console.CursorLeft = 0;
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 for (var i = 0; i < position; i++) { Console.Write(" "); }
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                Console.Write(gaugeValue);
 
                 Thread.Sleep(1000);
             }
 
             Console.ReadKey(true);
             Console.BackgroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine();
-            Console.WriteLine();
+            Console.SetCursorPosition(0, line);
+            for (var i = 0; i < 128; i++) { Console.Write(" "); }
+            Console.SetCursorPosition(0, line + 1);
+            for (var i = 0; i < 128; i++) { Console.Write(" "); }
+            Console.SetCursorPosition(1, currentLine);
+            for (var i = 0; i < 50; i++) { Console.Write(" "); }
         }
 
         static void WriteMessage(PIPoint point, string username, string message)
