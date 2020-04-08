@@ -1,5 +1,6 @@
-﻿namespace Turbo_PI_Chat
+﻿namespace TurboChat
 {
+    using OSIsoft.AF.Time;
     using System;
 
     /// <summary>
@@ -7,6 +8,6 @@
     /// </summary>
     interface IChatStringDisplay
     {
-        void AddChatString(DateTime time, string id, string text);
+        void AddChatString(AFTime time, string id, string text);
     }
 }

@@ -10,7 +10,6 @@ namespace TurboChat
     using OSIsoft.AF.Data;
     using OSIsoft.AF.PI;
     using OSIsoft.AF.Time;
-    using Turbo_PI_Chat;
 
     class Program
     {
@@ -23,15 +22,20 @@ namespace TurboChat
             var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
             var point = GetRoomSelection(server);
 
-            using (var ui = new TextUserInterface())
+            var options = new TurboChatOptions(username, point);
+            var writer = new ChatStringWriter(options);
+
+            using (var ui = new TextUserInterface(writer))
             {
                 ui.SplashScreen();
+
+                options.ExtensionHandler = new ExtensionHandler(ui);
 
                 // print last 50 messages in the "room"
                 var initialMessages = point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
                 foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
                 {
-                    PrintMessage(msg);
+                    PrintMessage(ui, msg);
                 }
 
                 // start a background task to print new "messages" in the "room" every "1 second"
@@ -48,21 +52,13 @@ namespace TurboChat
 
                         foreach (var update in updates)
                         {
-                            PrintMessage(update.Value);
+                            PrintMessage(ui, update.Value);
                         }
                         Thread.Sleep(1000);
                     }
                 });
 
-                // get the next dumb message to send
-                while (true)
-                {
-                    var newMessage = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(newMessage))
-                    {
-                        WriteMessage(point, username, newMessage);
-                    }
-                }
+                ui.Run();
             }
         }
 
@@ -111,15 +107,21 @@ namespace TurboChat
             }
         }
 
-        static void PrintMessage(AFValue afValue)
+        static void PrintMessage(IChatStringDisplay display, AFValue afValue)
         {
-            Console.WriteLine($"[{afValue.Timestamp}] {afValue.Value}");
-        }
+            string userName = string.Empty;
+            string value = afValue.Value.ToString();
+            if (!string.IsNullOrEmpty(value))
+            {
+                var colon = value.IndexOf(':');
+                if (colon >= 0)
+                {
+                    userName = value.Substring(0, colon).Trim();
+                    value = value.Substring(colon + 1).Trim();
+                }
+            }
 
-        static void WriteMessage(PIPoint point, string username, string message)
-        {
-            var value = new AFValue($"{username,-10} : {message}", AFTime.Now);
-            point.UpdateValue(value, AFUpdateOption.Insert);
+            display.AddChatString(afValue.Timestamp, userName, value);
         }
     }
 }

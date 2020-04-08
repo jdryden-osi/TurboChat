@@ -44,11 +44,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtensionHandler.cs" />
     <Compile Include="IChatStringDisplay.cs" />
     <Compile Include="IChatStringWriter.cs" />
+    <Compile Include="ChatStringWriter.cs" />
+    <Compile Include="IExtensionHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextUserInterface.cs" />
+    <Compile Include="TurboChatOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

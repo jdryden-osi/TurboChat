@@ -1,5 +1,6 @@
-﻿namespace Turbo_PI_Chat
+﻿namespace TurboChat
 {
+    using OSIsoft.AF.Time;
     using System;
     using System.Collections.Generic;
 
@@ -9,14 +10,14 @@
     class TextUserInterface : IDisposable, IChatStringDisplay
     {
         private const string logo = @"
- ________  ___          _________  ___  ___  ________  ________  ________          ________  ___  ___  ________  _________   
-|\   __  \|\  \        |\___   ___\\  \|\  \|\   __  \|\   __  \|\   __  \        |\   ____\|\  \|\  \|\   __  \|\___   ___\ 
-\ \  \|\  \ \  \       \|___ \  \_\ \  \\\  \ \  \|\  \ \  \|\ /\ \  \|\  \       \ \  \___|\ \  \\\  \ \  \|\  \|___ \  \_| 
- \ \   ____\ \  \           \ \  \ \ \  \\\  \ \   _  _\ \   __  \ \  \\\  \       \ \  \    \ \   __  \ \   __  \   \ \  \  
-  \ \  \___|\ \  \           \ \  \ \ \  \\\  \ \  \\  \\ \  \|\  \ \  \\\  \       \ \  \____\ \  \ \  \ \  \ \  \   \ \  \ 
-   \ \__\    \ \__\           \ \__\ \ \_______\ \__\\ _\\ \_______\ \_______\       \ \_______\ \__\ \__\ \__\ \__\   \ \__\
-    \|__|     \|__|            \|__|  \|_______|\|__|\|__|\|_______|\|_______|        \|_______|\|__|\|__|\|__|\|__|    \|__|";
-
+ ________  ___          _________  ___  ___  ________  ________  ________  ________  ___  ___  ________  _________   
+|\   __  \|\  \        |\___   ___\\  \|\  \|\   __  \|\   __  \|\   __  \|\   ____\|\  \|\  \|\   __  \|\___   ___\ 
+\ \  \|\  \ \  \       \|___ \  \_\ \  \\\  \ \  \|\  \ \  \|\ /\ \  \|\  \ \  \___|\ \  \\\  \ \  \|\  \|___ \  \_| 
+ \ \   ____\ \  \           \ \  \ \ \  \\\  \ \   _  _\ \   __  \ \  \\\  \ \  \    \ \   __  \ \   __  \   \ \  \  
+  \ \  \___|\ \  \           \ \  \ \ \  \\\  \ \  \\  \\ \  \|\  \ \  \\\  \ \  \____\ \  \ \  \ \  \ \  \   \ \  \ 
+   \ \__\    \ \__\           \ \__\ \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\ \__\ \__\ \__\   \ \__\
+    \|__|     \|__|            \|__|  \|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__|\|__|\|__|\|__|    \|__|";
+                                                                                                                   
         private ConsoleColor originalBackground;
         private ConsoleColor originalForeground;
         private string originalTitle;
@@ -26,9 +27,12 @@
         private object consoleLock = new object();
 
         private Dictionary<string, ConsoleColor> colorMap = new Dictionary<string, ConsoleColor>();
+        private IChatStringWriter writer;
 
-        public TextUserInterface()
+        public TextUserInterface(IChatStringWriter writer)
         {
+            this.writer = writer;
+
             this.originalBackground = Console.BackgroundColor;
             this.originalForeground = Console.ForegroundColor;
             this.originalTitle = Console.Title;
@@ -77,11 +81,27 @@
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             BoxWindow();
 
+            //?? put PI TurboChat in header
+            //?? Add highlighted Room Name bar
+            //?? add Highlighted help bar at bottom
+
             Console.ReadKey();
-            Console.Beep();
         }
 
-        public void AddChatString(DateTime time, string id, string text)
+        public void Run()
+        {
+            // get the next dumb message to send
+            while (true)
+            {
+                var newMessage = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(newMessage))
+                {
+                    writer.SendChatString(newMessage);
+                }
+            }
+        }
+
+        public void AddChatString(AFTime time, string id, string text)
         {
             lock (consoleLock)
             {
@@ -93,6 +113,8 @@
                 }
 
                 Console.Write(time.ToString("hh:mm:ss") + ": ");
+                Console.Write(id);
+                Console.Write(":");
                 Console.WriteLine(text);
             }
         }

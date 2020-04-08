@@ -1,4 +1,4 @@
-﻿namespace Turbo_PI_Chat
+﻿namespace TurboChat
 {
     using System;
 
