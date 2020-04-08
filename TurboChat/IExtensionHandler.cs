@@ -8,6 +8,6 @@ namespace TurboChat
 {
     interface IExtensionHandler
     {
-        bool CallExtension(string commandLine);
+        bool ProcessMessage(TurboChatOptions options, string commandLine);
     }
 }
