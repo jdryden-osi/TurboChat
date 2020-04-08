@@ -103,7 +103,7 @@
             this.dataLeft = 1;
             this.dataTop = 2;
             this.dataRight = Console.WindowWidth - 2;
-            this.dataBottom = Console.WindowHeight - 4;
+            this.dataBottom = Console.WindowHeight - 3;
             this.CurrentLine = this.dataTop;
 
             BoxWindow();
@@ -111,7 +111,7 @@
             Console.CursorTop = 0;
             CenterText("╡ " + applicationName + " ╞");
 
-            //?? add Highlighted help bar at bottom
+            this.DrawHelpBar();
         }
 
         public void Run()
@@ -236,6 +236,8 @@
                     this.dataBottom += this.workAreaHeight;
                     this.workAreaHeight = 0;
 
+                    this.DrawHelpBar();
+
                     Console.CursorLeft = oldX;
                     Console.CursorTop = oldY;
                     Console.CursorVisible = true;
@@ -289,7 +291,7 @@
 
         private static void BoxWindow()
         {
-            Box(0, 0, Console.WindowWidth, Console.WindowHeight - 2);
+            Box(0, 0, Console.WindowWidth, Console.WindowHeight - 1);
         }
 
         private string ReadLine()
@@ -298,7 +300,7 @@
 
             Console.BackgroundColor =this.defaultBackground;
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.SetCursorPosition(this.dataLeft, Console.WindowHeight - 4);
+            Console.SetCursorPosition(this.dataLeft, this.dataBottom);
 
             // Blank out the input line
             Console.Write(new String(' ', this.dataRight - this.dataLeft));
@@ -309,13 +311,22 @@
             while (!this.exitProgram)
             {
                 keyInfo = Console.ReadKey(true);
-                // Ignore if Alt or Ctrl is pressed.
+
+                // Ignore if Alt pressed
                 if ((keyInfo.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt)
                     continue;
-                if ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control)
-                    continue;
 
-#if false
+                // Ignore if most Ctrl Keys
+                if ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control)
+                {
+                    if (keyInfo.Key == ConsoleKey.B)
+                    {
+                        Console.Beep();
+                    }
+                    continue;
+                }
+
+#if true
                 if (keyInfo.Key == ConsoleKey.F2)
                 {
                     this.ReserveWorkArea(2);
@@ -398,6 +409,28 @@
             Console.CursorLeft = this.dataLeft;
 
             return inputString;
+        }
+
+        private void DrawHelpBar()
+        {
+            var fg = Console.ForegroundColor;
+            var bg = Console.BackgroundColor;
+            var oldX = Console.CursorLeft;
+            var oldY = Console.CursorTop;
+
+            Console.BackgroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+
+            var fill = new string(' ', Console.WindowWidth - 1);
+            Console.SetCursorPosition(0, Console.WindowHeight - 1);
+            Console.Write(fill);
+            Console.CursorLeft = 6;
+            CenterText("Quit: Ctrl+C     New Room: Esc    Beep: Ctrl+B");
+
+            Console.ForegroundColor = fg;
+            Console.BackgroundColor = bg;
+            Console.CursorLeft = oldX;
+            Console.CursorTop = oldY;
         }
 
 #region IDisposable Support
