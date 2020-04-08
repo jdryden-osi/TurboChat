@@ -4,6 +4,7 @@ namespace TurboChat
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using OSIsoft.AF.Asset;
@@ -15,24 +16,27 @@ namespace TurboChat
     {
         static void Main(string[] args)
         {
-            // ask the TURBOCHAT user to enter their TURBOCHAT name
-            var username = GetUserName();
-
-            // pick a TURBOCHAT room to digitally chill out in
-            var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
-            var point = GetRoomSelection(server);
-
-            var options = new TurboChatOptions(username, point);
+            var options = new TurboChatOptions();
             var writer = new ChatStringWriter(options);
 
             using (var ui = new TextUserInterface(writer))
             {
                 ui.SplashScreen();
 
+                // ask the TURBOCHAT user to enter their TURBOCHAT name
+                options.Name = GetUserName();
+
+                // pick a TURBOCHAT room to digitally chill out in
+                var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
+                options.Point = GetRoomSelection(server);
+
                 options.ExtensionHandler = new ExtensionHandler(ui);
 
+                ui.DrawApplicationChrome();
+                ui.AddChatRoomName(RoomName(options.Point));
+
                 // print last 50 messages in the "room"
-                var initialMessages = point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
+                var initialMessages = options.Point.RecordedValuesByCount(AFTime.Now, 50, false, AFBoundaryType.Inside, null, false);
                 foreach (var msg in initialMessages.OrderBy(m => m.Timestamp))
                 {
                     PrintMessage(ui, msg);
@@ -42,7 +46,7 @@ namespace TurboChat
                 Task.Run(() =>
                 {
                     var pipe = new PIDataPipe(AFDataPipeType.Snapshot);
-                    pipe.AddSignups(new List<PIPoint> { point });
+                    pipe.AddSignups(new List<PIPoint> { options.Point });
 
                     while (true)
                     {
@@ -96,13 +100,7 @@ namespace TurboChat
             Console.WriteLine("Available rooms: ");
             for (var i = 1; i <= rooms.Count; i++)
             {
-                if (!rooms[i-1].IsAttributeLoaded("Descriptor"))
-                {
-                    rooms[i - 1].LoadAttributes(new string[] { "Descriptor" });
-                }
-
-                var desc = rooms[i - 1].GetAttribute("Descriptor") as string;
-                Console.WriteLine($"{i,3} {(string.IsNullOrWhiteSpace(desc) ? rooms[i-1].Name : desc)}");
+                Console.WriteLine($"{i,3} {RoomName(rooms[i - 1])}");
             }
 
             Console.Write("Select your TURBOCHAT room (/N to create new room): ");
@@ -126,19 +124,21 @@ namespace TurboChat
 
         static PIPoint CreateNewRoom(PIServer server)
         {
+            Console.Write("Enter room name: ");
             while (true)
             {
-                Console.Write("Enter room name: ");
                 var newRoom = Console.ReadLine();
                 if (string.IsNullOrWhiteSpace(newRoom))
                 {
                     Console.WriteLine("Come on! Say something!");
+                    Console.Write("Go ahead. I'm listening: ");
                 }
                 else if (!CheckLength(newRoom))
                 {
                     if (PIPoint.TryFindPIPoint(server, "TurboChat-" + newRoom, out _))
                     {
                         Console.WriteLine("You can't steal another chat room name! Duh!");
+                        Console.Write("Try again: ");
                     }
                     else
                     {
@@ -163,6 +163,20 @@ namespace TurboChat
             }
 
             display.AddChatString(afValue.Timestamp, userName, value);
+        }
+
+        /// <summary>
+        /// To determine the room name associated with the input PI Point
+        /// </summary>
+        static string RoomName(PIPoint tag)
+        {
+            if (!tag.IsAttributeLoaded("Descriptor"))
+            {
+                tag.LoadAttributes(new string[] { "Descriptor" });
+            }
+
+            var desc = tag.GetAttribute("Descriptor") as string;
+            return string.IsNullOrWhiteSpace(desc) ? tag.Name : desc;
         }
     }
 }

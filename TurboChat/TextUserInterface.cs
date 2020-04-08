@@ -3,6 +3,7 @@
     using OSIsoft.AF.Time;
     using System;
     using System.Collections.Generic;
+    using System.Xml.Schema;
 
     /// <summary>
     /// Class that provides all UI for the main application
@@ -17,7 +18,8 @@
   \ \  \___|\ \  \           \ \  \ \ \  \\\  \ \  \\  \\ \  \|\  \ \  \\\  \ \  \____\ \  \ \  \ \  \ \  \   \ \  \ 
    \ \__\    \ \__\           \ \__\ \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\ \__\ \__\ \__\   \ \__\
     \|__|     \|__|            \|__|  \|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__|\|__|\|__|\|__|    \|__|";
-                                                                                                                   
+
+        private const string applicationName = "PI TurboChat";
         private ConsoleColor originalBackground;
         private ConsoleColor originalForeground;
         private string originalTitle;
@@ -28,6 +30,13 @@
 
         private Dictionary<string, ConsoleColor> colorMap = new Dictionary<string, ConsoleColor>();
         private IChatStringWriter writer;
+        private bool exitProgram = false;
+
+        private int dataTop;
+        private int dataLeft;
+        private int dataRight;
+        private int dataBottom;
+        private int currentLine;
 
         public TextUserInterface(IChatStringWriter writer)
         {
@@ -59,7 +68,7 @@
             Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
 
             Console.Clear();
-            Console.Title = "TURBO PI-CHAT";
+            Console.Title = applicationName;
 
             Console.SetCursorPosition(1, 15);
             Console.WriteLine(logo);
@@ -72,6 +81,7 @@
             Console.SetCursorPosition(1, Console.WindowHeight - 1);
             Console.Write("Press any key to continue . . .");
             Console.ReadKey();
+            Console.Clear();
         }
 
         public void DrawApplicationChrome()
@@ -79,22 +89,30 @@
             Console.Clear();
 
             Console.ForegroundColor = ConsoleColor.DarkYellow;
+            this.dataLeft = 1;
+            this.dataTop = 2;
+            this.dataRight = Console.WindowWidth - 2;
+            this.dataBottom = Console.WindowHeight - 4;
+            this.currentLine = this.dataTop;
+
             BoxWindow();
+
+            Console.CursorTop = 0;
+            CenterText("╡ " + applicationName + " ╞");
 
             //?? put PI TurboChat in header
             //?? Add highlighted Room Name bar
             //?? add Highlighted help bar at bottom
 
-            Console.ReadKey();
         }
 
         public void Run()
         {
             // get the next dumb message to send
-            while (true)
+            while (!this.exitProgram)
             {
-                var newMessage = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(newMessage))
+                var newMessage = ReadLine();
+                if (!this.exitProgram && !string.IsNullOrWhiteSpace(newMessage))
                 {
                     writer.SendChatString(newMessage);
                 }
@@ -105,6 +123,21 @@
         {
             lock (consoleLock)
             {
+                int oldX = Console.CursorLeft;
+                int oldY = Console.CursorTop;
+
+                Console.SetCursorPosition(this.dataLeft, this.currentLine);
+
+                if (currentLine < this.dataBottom)
+                {
+                    ++this.currentLine;
+                }
+                else
+                {
+                    // Scroll the data area
+                    Console.MoveBufferArea(this.dataLeft, this.dataTop + 1, this.dataRight, this.dataBottom - 1, this.dataLeft, this.dataTop);
+                }
+
                 ConsoleColor textColor;
                 if (!this.colorMap.TryGetValue(id, out textColor))
                 {
@@ -112,10 +145,35 @@
                     this.colorMap[id] = textColor;
                 }
 
-                Console.Write(time.ToString("hh:mm:ss") + ": ");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(time.ToString("hh:mm:ss") + " ");
+                Console.ForegroundColor = textColor;
                 Console.Write(id);
                 Console.Write(":");
                 Console.WriteLine(text);
+
+                Console.CursorLeft = oldX;
+                Console.CursorTop = oldY;
+            }
+        }
+
+        public void AddChatRoomName(string roomName)
+        {
+            lock (this.consoleLock)
+            {
+                var fg = Console.ForegroundColor;
+                var bg = Console.BackgroundColor;
+
+                Console.SetCursorPosition(1, 1);
+                Console.BackgroundColor = ConsoleColor.DarkGray;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                var blanks = new string(' ', this.dataRight - this.dataLeft);
+                Console.Write(blanks);
+                Console.CursorLeft = this.dataLeft;
+                Console.Write($"Room: {roomName}");
+
+                Console.ForegroundColor = fg;
+                Console.BackgroundColor = bg;
             }
         }
 
@@ -164,9 +222,90 @@
 
         private static void BoxWindow()
         {
-            Box(0, 0, Console.WindowWidth - 1, Console.WindowHeight - 1);
+            Box(0, 0, Console.WindowWidth - 1, Console.WindowHeight - 2);
         }
 
+        private string ReadLine()
+        {
+            int maxWidth = Console.WindowWidth - 3;
+
+            Console.SetCursorPosition(1, Console.WindowHeight - 4);
+
+            string inputString = string.Empty;
+            ConsoleKeyInfo keyInfo;
+            while (!this.exitProgram)
+            {
+                keyInfo = Console.ReadKey(true);
+                // Ignore if Alt or Ctrl is pressed.
+                if ((keyInfo.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt)
+                    continue;
+                if ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control)
+                    continue;
+
+                // Ignore if KeyChar value is \u0000.
+                if (keyInfo.KeyChar == '\u0000')
+                    continue;
+
+                // Ignore tab key.
+                if (keyInfo.Key == ConsoleKey.Tab) 
+                    continue;
+
+                // Handle backspace.
+                if (keyInfo.Key == ConsoleKey.Backspace)
+                {
+                    // Are there any characters to erase?
+                    if (inputString.Length > 0)
+                    {
+                        lock (consoleLock)
+                        {
+                            // Determine where we are in the console buffer.
+                            int cursorCol = Console.CursorLeft - 1;
+                            int oldLength = inputString.Length;
+
+                            inputString = inputString.Substring(0, oldLength - 1);
+                            Console.CursorLeft = this.dataLeft;
+                            Console.Write(inputString + new String(' ', oldLength - inputString.Length));
+                            Console.CursorLeft = cursorCol;
+                        }
+                    }
+                    continue;
+                }
+
+                // Handle Escape key.
+                if (keyInfo.Key == ConsoleKey.Escape) {
+                    inputString = string.Empty;
+                    this.exitProgram = true;
+                    break;
+                }
+
+                // Handle the Enter key
+                if (keyInfo.Key == ConsoleKey.Enter)
+                {
+                    break;
+                }
+
+                if (inputString.Length >= maxWidth - 1)
+                {
+                    Console.Beep();
+                } 
+                else
+                {
+                    // Handle key by adding it to input string.
+                    lock (consoleLock)
+                    {
+                        Console.Write(keyInfo.KeyChar);
+                        inputString += keyInfo.KeyChar;
+                    }
+                }
+            }
+
+            // Blank out the input line
+            Console.CursorLeft = this.dataLeft;
+            Console.Write(new String(' ', this.dataRight - this.dataLeft));
+            Console.CursorLeft = this.dataLeft;
+
+            return inputString;
+        }
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
