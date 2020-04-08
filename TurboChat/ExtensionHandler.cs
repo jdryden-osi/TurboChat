@@ -60,11 +60,14 @@ namespace TurboChat
                 Console.ReadLine();
                 Console.WriteLine("Access Denied");
             }
-
+            Thread.Sleep(1000);
+            Console.Write("and......");
+            Thread.Sleep(1000);
             Console.Beep();
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("YOU DIDN'T SAY THE MAGIC WORD!!!");
             Thread.Sleep(1000);
+            System.Diagnostics.Process.Start("https://www.youtube.com/watch?v=RfiQYRn7fBg");
             while(true)
             {
                 Thread.Sleep(100);
