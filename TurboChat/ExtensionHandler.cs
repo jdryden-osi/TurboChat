@@ -187,7 +187,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         private void DrawGauge(TurboChatOptions options, string point)
         {
             var thisUI = (TextUserInterface)ui;
-            var line = thisUI.ReserveWorkArea(3) + 1;
+            var line = thisUI.ReserveWorkArea(3);
 
             Console.SetCursorPosition(0, line);
 //            Console.Write("Press any key to exit gauge mode...");

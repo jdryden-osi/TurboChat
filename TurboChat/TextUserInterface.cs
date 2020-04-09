@@ -222,7 +222,7 @@
                 Console.CursorVisible = false;
             }
 
-            return this.dataBottom + 1;
+            return this.dataBottom + 3;
         }
 
         public void ReleaseWorkArea()
@@ -248,6 +248,7 @@
                     }
 
                     this.dataBottom += this.workAreaHeight;
+                    this.CurrentLine -= this.workAreaHeight;
                     this.workAreaHeight = 0;
 
                     this.DrawHelpBar();
