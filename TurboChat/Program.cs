@@ -19,12 +19,12 @@ namespace TurboChat
             var options = new TurboChatOptions();
             var writer = new ChatStringWriter(options);
 
-            using (var ui = new TextUserInterface(writer, options))
+            using (var ui = new TextUserInterface(writer))
             {
                 ui.SplashScreen();
 
                 // ask the TURBOCHAT user to enter their TURBOCHAT name
-                options.Colors = GetColorScheme();
+                ui.ColorScheme = GetColorScheme(ui);
                 options.Name = GetUserName();
                 while (SetupChatRoom(ui, options));
             }
@@ -34,7 +34,7 @@ namespace TurboChat
         {
             // pick a TURBOCHAT room to digitally chill out in
             var server = (new PIServers())["CSPIBUILD.dev.osisoft.int"];
-            var point = GetRoomSelection(server, options);
+            var point = GetRoomSelection(server, ui);
             if (point == null)
             {
                 return false;
@@ -110,15 +110,44 @@ namespace TurboChat
             return false;
         }
 
-        static ColorScheme GetColorScheme()
+        static ColorScheme GetColorScheme(TextUserInterface ui)
         {
-            return new ColorScheme(ConsoleColor.Black, ConsoleColor.Green);
+            Console.WriteLine("Available color schemes: ");
+            var count = 1;
+            foreach (string key in ui.ColorSchemeOptions.Keys)
+            {
+                ColorScheme tmp = ui.ColorSchemeOptions[key];
+                Console.ForegroundColor = tmp.Foreground;
+                Console.BackgroundColor = tmp.Background;
+                Console.WriteLine($"{count,3} {key}");
+                count++;
+            }
+            Console.ForegroundColor = ui.ColorScheme.Foreground;
+            Console.BackgroundColor = ui.ColorScheme.Background;
+            Console.Write("Select your color scheme: ");
+
+            while (true)
+            {
+                var selection = Console.ReadLine();
+                if (int.TryParse(selection, out var index) && index > 0 && index <= count)
+                {
+                    return ui.ColorSchemeOptions.ElementAt(index - 1).Value;
+                }
+                else if (selection == "/Q")
+                {
+                    return null;
+                }
+                else
+                {
+                    Console.Write("WRONG! Do you even get colors?: ");
+                }
+            }
         }
 
-        static PIPoint GetRoomSelection(PIServer server, TurboChatOptions options)
+        static PIPoint GetRoomSelection(PIServer server, TextUserInterface ui)
         {
-            Console.ForegroundColor = options.Colors.foreground;
-            Console.BackgroundColor = options.Colors.background;
+            Console.ForegroundColor = ui.ColorScheme.Foreground;
+            Console.BackgroundColor = ui.ColorScheme.Background;
             Console.Clear();
             var rooms = PIPoint.FindPIPoints(server, "TurboChat*").ToList();
             Console.WriteLine("Available rooms: ");

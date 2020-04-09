@@ -23,8 +23,8 @@
         private const string applicationName = "PI TurboChat";
         private ConsoleColor originalBackground;
         private ConsoleColor originalForeground;
-        private ConsoleColor defaultBackground;
-        private ConsoleColor defaultForeground;
+        private ColorScheme colors;
+        
         private string originalTitle;
         private int originalWidth;
         private int originalHeight;
@@ -56,9 +56,31 @@
         };
         private int nextColor = 0;
 
+        public ColorScheme ColorScheme
+        {
+            get { return colors; }
+            set
+            {
+                colors = value;
+                Console.ForegroundColor = colors.Foreground;
+                Console.BackgroundColor = colors.Background;
+                Console.Clear();
+            }
+        }
+
+        public Dictionary<string, ColorScheme> ColorSchemeOptions = new Dictionary<string, ColorScheme>(){
+            { "Boring", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.White} },
+            { "Saved By the Bell", new ColorScheme { Background=ConsoleColor.DarkMagenta, Foreground=ConsoleColor.Yellow} },
+            { "Star Wars", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.Yellow} },
+            { "Top Gun", new ColorScheme { Background=ConsoleColor.Cyan, Foreground=ConsoleColor.Magenta} },
+            { "Stranger Things", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.Red} },
+            { "Big Trouble in Little China", new ColorScheme { Background=ConsoleColor.Green, Foreground=ConsoleColor.Yellow} },
+            { "The Matrix", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.Green} }
+        };
+
         public int CurrentLine { get; private set; }
 
-        public TextUserInterface(IChatStringWriter writer, TurboChatOptions options)
+        public TextUserInterface(IChatStringWriter writer)
         {
             this.writer = writer;
 
@@ -67,10 +89,7 @@
             this.originalTitle = Console.Title;
             this.originalWidth = Console.WindowWidth;
             this.originalHeight = Console.WindowHeight;
-
-            this.defaultBackground = ConsoleColor.DarkBlue;
-            this.defaultForeground = ConsoleColor.White;
-
+            this.ColorScheme = new ColorScheme(ConsoleColor.DarkBlue, ConsoleColor.White);
 
             if (Console.WindowHeight < 50)
             {
@@ -85,7 +104,7 @@
 
         public void SplashScreen()
         {
-            Console.BackgroundColor = this.defaultBackground;
+            Console.BackgroundColor = this.colors.Background;
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             // Remove Window Scroll bar
@@ -112,8 +131,8 @@
         {
             Console.Clear();
 
-            Console.BackgroundColor = this.defaultBackground;
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.BackgroundColor = this.colors.Background;
+            Console.ForegroundColor = this.colors.Foreground;
             this.dataLeft = 1;
             this.dataTop = 2;
             this.dataRight = Console.WindowWidth - 2;
@@ -150,7 +169,7 @@
                 int oldX = Console.CursorLeft;
                 int oldY = Console.CursorTop;
 
-                Console.BackgroundColor = this.defaultBackground;
+                Console.BackgroundColor = this.colors.Background;
                 Console.SetCursorPosition(this.dataLeft, this.CurrentLine);
 
                 if (CurrentLine < this.dataBottom)
@@ -168,10 +187,14 @@
                 if (!this.colorMap.TryGetValue(id, out textColor))
                 {
                     textColor = this.validColors[this.nextColor++ % this.validColors.Length];
+                    if (textColor == this.colors.Background)
+                    {
+                        textColor = this.validColors[this.nextColor++ % this.validColors.Length];
+                    }
                     this.colorMap[id] = textColor;
                 }
 
-                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = this.colors.Foreground;
                 Console.Write(time.ToString("hh:mm:ss") + " ");
                 Console.ForegroundColor = textColor;
                 Console.Write(id);
@@ -187,9 +210,6 @@
         {
             lock (this.consoleLock)
             {
-                var fg = Console.ForegroundColor;
-                var bg = Console.BackgroundColor;
-
                 Console.SetCursorPosition(1, 1);
                 Console.BackgroundColor = ConsoleColor.DarkGray;
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -198,8 +218,8 @@
                 Console.CursorLeft = this.dataLeft;
                 Console.Write($"Room: {roomName}");
 
-                Console.ForegroundColor = fg;
-                Console.BackgroundColor = bg;
+                Console.ForegroundColor = this.colors.Foreground;
+                Console.BackgroundColor = this.colors.Background;
             }
         }
 
@@ -213,7 +233,7 @@
 
             lock (this.consoleLock)
             {
-                Console.BackgroundColor = this.defaultBackground;
+                Console.BackgroundColor = this.colors.Background;
                 this.workAreaHeight = Math.Min(numberOfLines, 4);
                 int newTop = this.dataTop + this.workAreaHeight;
                 Console.MoveBufferArea(Console.WindowLeft, newTop, Console.WindowWidth, this.dataBottom - dataTop, Console.WindowLeft, this.dataTop);
@@ -234,8 +254,8 @@
                     int oldX = Console.CursorLeft;
                     int oldY = Console.CursorTop;
 
-                    Console.BackgroundColor = this.defaultBackground;
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.BackgroundColor = this.colors.Background;
+                    Console.ForegroundColor = this.colors.Foreground;
                     Console.MoveBufferArea(Console.WindowLeft, this.dataBottom, Console.WindowWidth, this.workAreaHeight + 1, Console.WindowLeft, this.dataBottom + this.workAreaHeight);
 
                     for (int i = 0; i <= this.workAreaHeight; ++i)
@@ -256,7 +276,7 @@
                     Console.CursorLeft = oldX;
                     Console.CursorTop = oldY;
                     Console.CursorVisible = true;
-                    Console.ForegroundColor = this.defaultForeground;
+                    Console.ForegroundColor = this.colors.Foreground;
                 }
             }
         }
@@ -313,8 +333,8 @@
         {
             int maxWidth = Console.WindowWidth - 3;
 
-            Console.BackgroundColor =this.defaultBackground;
-            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = this.colors.Background;
+            Console.ForegroundColor = this.colors.Foreground;
             Console.SetCursorPosition(this.dataLeft, this.dataBottom);
 
             // Blank out the input line
@@ -392,7 +412,7 @@
                     // Handle key by adding it to input string.
                     lock (consoleLock)
                     {
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.ForegroundColor = this.colors.Foreground;
                         Console.CursorLeft = this.dataLeft;
                         inputString += keyInfo.KeyChar;
                         Console.Write(inputString);
@@ -410,8 +430,6 @@
 
         private void DrawHelpBar()
         {
-            var fg = Console.ForegroundColor;
-            var bg = Console.BackgroundColor;
             var oldX = Console.CursorLeft;
             var oldY = Console.CursorTop;
 
@@ -424,8 +442,8 @@
             Console.CursorLeft = 6;
             CenterText("Quit: Ctrl+C     New Room: Esc    Beep: Ctrl+B");
 
-            Console.ForegroundColor = fg;
-            Console.BackgroundColor = bg;
+            Console.ForegroundColor = this.colors.Foreground;
+            Console.BackgroundColor = this.colors.Background;
             Console.CursorLeft = oldX;
             Console.CursorTop = oldY;
         }
