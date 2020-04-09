@@ -213,10 +213,9 @@
                 Console.SetCursorPosition(1, 1);
                 Console.BackgroundColor = ConsoleColor.DarkGray;
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                var blanks = new string(' ', this.dataRight - this.dataLeft);
-                Console.Write(blanks);
                 Console.CursorLeft = this.dataLeft;
-                Console.Write($"Room: {roomName}");
+                var roomBanner = $"Room: {roomName}";
+                Console.Write(roomBanner.PadRight(this.dataRight - this.dataLeft + 1, ' '));
 
                 Console.ForegroundColor = this.colors.Foreground;
                 Console.BackgroundColor = this.colors.Background;

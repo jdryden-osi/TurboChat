@@ -23,11 +23,20 @@ namespace TurboChat
             {
                 ui.SplashScreen();
 
-                // ask the TURBOCHAT user to enter their TURBOCHAT name
-                ui.ColorScheme = GetColorScheme(ui);
-                options.Name = GetUserName();
-                while (SetupChatRoom(ui, options));
+                var colorScheme = GetColorScheme(ui);
+                if (colorScheme != null)
+                {
+
+                    ui.ColorScheme = colorScheme;
+
+                    // ask the TURBOCHAT user to enter their TURBOCHAT name
+                    options.Name = GetUserName();
+                    while (SetupChatRoom(ui, options)) ;
+                }
             }
+
+            Console.ResetColor();
+            Console.Clear();
         }
 
         static bool SetupChatRoom(TextUserInterface ui, TurboChatOptions options)
@@ -125,7 +134,7 @@ namespace TurboChat
             }
             Console.ForegroundColor = ui.ColorScheme.Foreground;
             Console.BackgroundColor = ui.ColorScheme.Background;
-            Console.Write("Select your color scheme: ");
+            Console.Write("Select your color scheme (or /Q to quit): ");
 
             while (true)
             {
@@ -157,7 +166,7 @@ namespace TurboChat
                 Console.WriteLine($"{i,3} {RoomName(rooms[i - 1])}");
             }
 
-            Console.Write("Select your TURBOCHAT room (/N to create new room): ");
+            Console.Write("Select your TURBOCHAT room (/N to create new room, /Q to quit): ");
             while (true)
             {
                 var selection = Console.ReadLine();
