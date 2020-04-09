@@ -42,6 +42,20 @@
 
         private int workAreaHeight = 0; // 0 means no reserved work area
 
+        private ConsoleColor[] validColors = {
+            ConsoleColor.White,
+            ConsoleColor.Yellow,
+            ConsoleColor.Cyan,
+            ConsoleColor.Green,
+            ConsoleColor.Magenta,
+            ConsoleColor.Red,
+            ConsoleColor.Gray,
+            ConsoleColor.DarkCyan,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkGray,
+        };
+        private int nextColor = 0;
+
         public int CurrentLine { get; private set; }
 
         public TextUserInterface(IChatStringWriter writer)
@@ -75,7 +89,7 @@
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             // Remove Window Scroll bar
-            Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
+            //Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
 
             Console.Clear();
             Console.Title = applicationName;
@@ -153,7 +167,7 @@
                 ConsoleColor textColor;
                 if (!this.colorMap.TryGetValue(id, out textColor))
                 {
-                    textColor = ConsoleColor.White; //?? get unique color
+                    textColor = this.validColors[this.nextColor++ % this.validColors.Length];
                     this.colorMap[id] = textColor;
                 }
 
@@ -326,26 +340,6 @@
                     continue;
                 }
 
-#if true
-                if (keyInfo.Key == ConsoleKey.F2)
-                {
-                    this.ReserveWorkArea(2);
-                    continue;
-                }
-
-                if (keyInfo.Key == ConsoleKey.F3)
-                {
-                    this.ReserveWorkArea(3);
-                    continue;
-                }
-
-                if (keyInfo.Key == ConsoleKey.F1)
-                {
-                    this.ReleaseWorkArea();
-                    continue;
-                }
-#endif
-
                 // Ignore if KeyChar value is \u0000.
                 if (keyInfo.KeyChar == '\u0000')
                     continue;
@@ -397,8 +391,10 @@
                     // Handle key by adding it to input string.
                     lock (consoleLock)
                     {
-                        Console.Write(keyInfo.KeyChar);
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.CursorLeft = this.dataLeft;
                         inputString += keyInfo.KeyChar;
+                        Console.Write(inputString);
                     }
                 }
             }
