@@ -116,10 +116,11 @@ namespace TurboChat
             var count = 1;
             foreach (string key in ui.ColorSchemeOptions.Keys)
             {
+                string keyName = key.PadRight(30, ' ');
                 ColorScheme tmp = ui.ColorSchemeOptions[key];
                 Console.ForegroundColor = tmp.Foreground;
                 Console.BackgroundColor = tmp.Background;
-                Console.WriteLine($"{count,3} {key}");
+                Console.WriteLine($"{count,3} {keyName}");
                 count++;
             }
             Console.ForegroundColor = ui.ColorScheme.Foreground;

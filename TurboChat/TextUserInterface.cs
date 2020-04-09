@@ -69,7 +69,7 @@
         }
 
         public Dictionary<string, ColorScheme> ColorSchemeOptions = new Dictionary<string, ColorScheme>(){
-            { "Boring", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.White} },
+            { "Boring", new ColorScheme { Background=ConsoleColor.DarkBlue, Foreground=ConsoleColor.White} },
             { "Saved By the Bell", new ColorScheme { Background=ConsoleColor.DarkMagenta, Foreground=ConsoleColor.Yellow} },
             { "Star Wars", new ColorScheme { Background=ConsoleColor.Black, Foreground=ConsoleColor.Yellow} },
             { "Top Gun", new ColorScheme { Background=ConsoleColor.Cyan, Foreground=ConsoleColor.Magenta} },
